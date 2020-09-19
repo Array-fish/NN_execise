@@ -32,11 +32,11 @@ vector<double> ManageLayer::forword(const vector<double>& input) {
 		else {
 			middle_layers[l].set_inputs(middle_layers[l - 1].get_outputs());
 		}
-		middle_layers[l].comp_outputs();
+		middle_layers[l].calc_outputs();
 	}
 	// 出力層は最後の中間層の出力を入力としてもらっている
 	output_layer->set_inputs(middle_layers[middle_layers.size() - 1].get_outputs());
-	output_layer->comp_outputs();
+	output_layer->calc_outputs();
 	// 出力層の出力を返り値で返している
 	return output_layer->get_outputs();
 }
@@ -44,18 +44,18 @@ void ManageLayer::back_online(vector<double> &error) {
 	// 真値と出力層の出力の差を誤差として出力層の更新用dL_dxにセットする
 	output_layer->set_dL_dx(error);
 	// 更新用dL_dxを使って前の層に渡すdL_dxを算出する　重み更新の前にやること
-	output_layer->comp_dL_dY();
+	output_layer->calc_dL_dx_for_before();
 	// 更新用dL_dxを使って重みを更新
 	output_layer->update_weights();
-	//以下同様に すべての中間層の重みを更新
+	// 以下同様に すべての中間層の重みを更新
 	for (int l = num_layer - 1; l >= 0; --l) {
 		if (l == num_layer - 1) {
-			middle_layers[l].set_dL_dx(output_layer->get_dL_dY_for_before());
+			middle_layers[l].set_dL_dx(output_layer->get_dL_dx_for_before());
 		}
 		else {
-			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dY_for_before());
+			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
 		}
-		middle_layers[l].comp_dL_dY();
+		middle_layers[l].calc_dL_dx_for_before();
 		middle_layers[l].update_weights();
 	}
 }
@@ -63,16 +63,16 @@ void ManageLayer::back_online(vector<double> &error) {
 // ただしこちらは重みの更新をしないで，誤差をためる
 void ManageLayer::pool_errors_patch(const vector<double>& error) {
 	output_layer->set_dL_dx(error);
-	output_layer->comp_dL_dY();
+	output_layer->calc_dL_dx_for_before();
 	output_layer->pool_errors();
 	for (int l = num_layer - 1; l >= 0; --l) {
 		if (l == num_layer - 1) {
-			middle_layers[l].set_dL_dx(output_layer->get_dL_dY_for_before());
+			middle_layers[l].set_dL_dx(output_layer->get_dL_dx_for_before());
 		}
 		else {
-			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dY_for_before());
+			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
 		}
-		middle_layers[l].comp_dL_dY();
+		middle_layers[l].calc_dL_dx_for_before();
 		middle_layers[l].pool_errors();
 	}
 }
@@ -85,10 +85,9 @@ void ManageLayer::back_patch(int data_size) {
 }
 
 void ManageLayer::online(const vector<vector<double>> &input_data, vector<vector<double>> &output_data) {
-	// 本当は誤差でループの終了をコントロールしなければならないが面倒なので一定回数で終わるようにした
-	double ave_gosa =100;
-	for (int times = 0; times < 10001 && ave_gosa / input_data.size() > 0.01; ++times) {
-		ave_gosa = 0;
+	double loss =100;
+	for (int times = 0; times < 10001 && loss / input_data.size() > 0.01; ++times) {
+		loss = 0;
 		for (int d = 0; d < input_data.size(); d++) {
 			// ここで順方向と逆伝搬をやっている
 			vector<double> error(output_data[0].size());
@@ -98,17 +97,17 @@ void ManageLayer::online(const vector<vector<double>> &input_data, vector<vector
 			}
 			back_online(error);
 			// 誤差の算出　これはちゃんと動いてるか調べるもので別に更新に使ってるわけじゃない．
-			double gosa = 0;
+			double square_error = 0;
 			for (int i = 0; i < error.size(); i++) {
-				gosa += pow(error[i], 2);
+				square_error += pow(error[i], 2);
 			}
-			ave_gosa += gosa;
+			loss += square_error;
 			/*if (times % 100 == 0) {
 				cout << "times:" << times << ", " << "gosa:" << gosa << endl;
 			}*/
 		}
 		if (times % 10 == 0) {
-			cout << "times:" << times << ", ave_gosa:" << ave_gosa / input_data.size() << endl;
+			cout << "times:" << times << ", loss:" << loss / input_data.size() << endl;
 		}	
 	}
 	/*while(true) {
@@ -134,26 +133,26 @@ void ManageLayer::online(const vector<vector<double>> &input_data, vector<vector
 }
 // 大体onlineと同じ
 void ManageLayer::patch(const vector<vector<double>>& input_data, vector<vector<double>>& output_data) {
-	double ave_gosa=100;
-	for (int times = 0; times < 100001 && ave_gosa / input_data.size() > 0.01; ++times) {
-		ave_gosa = 0;
+	double loss = 100;
+	for (int times = 0; times < 100001 && loss / input_data.size() > 0.01; ++times) {
+		loss = 0;
 		for (int d = 0; d < input_data.size(); d++) {
 			vector<double> error(output_data[0].size());
 			vector<double> result = forword(input_data[d]);
 			for (int out = 0; out < output_data[0].size(); ++out) {
 				error[out] = result[out] - output_data[d][out];
 			}
-			pool_errors_patch(error);//
-			double gosa = 0;
+			pool_errors_patch(error);
+			double square_error = 0;
 			for (int i = 0; i < error.size(); i++) {
-				gosa += pow(error[i], 2);
+				square_error += pow(error[i], 2);
 			}
-			ave_gosa += gosa;
+			loss += square_error;
 		}
 		// ここでためた誤差を使って一気に逆伝播をかけている
 		back_patch(input_data.size());
 		if (times % 10 == 0) {
-			cout << "times:" << times << ", ave_gosa:" << ave_gosa / input_data.size() << endl;
+			cout << "times:" << times << ", loss:" << loss / input_data.size() << endl;
 		}
 
 	}
@@ -178,21 +177,21 @@ void ManageLayer::patch(const vector<vector<double>>& input_data, vector<vector<
 			break;
 	}*/
 }
-void ManageLayer::test(const vector<vector<double>>& test_input_data, vector<vector<double>>& test_output_data) {
-	double ave_gosa = 0;
+void ManageLayer::loss(const vector<vector<double>>& test_input_data, vector<vector<double>>& test_output_data) {
+	double loss = 0;
 	for (int d = 0; d < test_input_data.size(); d++) {
 		vector<double> error(test_output_data[0].size());
 		vector<double> result = forword(test_input_data[d]);
 		for (int out = 0; out < test_output_data[0].size(); ++out) {
 			error[out] = result[out] - test_output_data[d][out];
 		}
-		double gosa = 0;
+		double square_error = 0;
 		for (int i = 0; i < error.size(); i++) {
-			gosa += pow(error[i], 2);
+			square_error += pow(error[i], 2);
 		}
-		ave_gosa += gosa;
+		loss += square_error;
 	}
-	cout << "test_ave_gosa:" << ave_gosa / test_input_data.size() << endl;
+	cout << "test loss:" << loss / test_input_data.size() << endl;
 }
 void ManageLayer::print_weight() {
 	for (int l = 0; l < middle_layers.size(); ++l) {
