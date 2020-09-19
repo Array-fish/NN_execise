@@ -79,8 +79,10 @@ void ManageLayer::pool_errors_patch(const vector<double>& error) {
 //全ての層でためた誤差を使って重みを更新する
 void ManageLayer::back_patch(int data_size) {
 	output_layer->update_weights_for_patch(data_size);
+	output_layer->reset_weights_variation();
 	for (int l = num_layer - 1; l >= 0; --l) {
 		middle_layers[l].update_weights_for_patch(data_size);
+		middle_layers[l].reset_weights_variation();
 	}
 }
 

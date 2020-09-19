@@ -30,6 +30,7 @@ public:
 	vector<double> get_dL_dx_for_before();               // 前の層が使う誤差dL/dYを渡すとき用
 	void pool_errors();                                  // 誤差を蓄積する
 	void update_weights_for_patch(int data_size);        // パッチ学習でsum_errors_for_patchを使って重みを更新する
+	void reset_weights_variation();                      // 蓄積された誤差をリセットする。
 	void print_weight();                                 // デバック用関数
 };
 
@@ -50,5 +51,8 @@ inline void layer::set_dL_dx(const vector<double>& dL_dx) {
 }
 inline vector<double> layer::get_dL_dx_for_before() {
 	return dL_dx_for_before;
+}
+inline void layer::reset_weights_variation() {
+	sum_errors_for_patch = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));// 初期化
 }
 #endif LAYER_H

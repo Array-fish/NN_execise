@@ -23,54 +23,80 @@ void layer::init_weight() {
 		}
 	}
 }
+/**
+* 穴埋めポイント
+* calc_output()
+* この関数では層の出力を算出する。
+* 算出した出力はoutputs[]に代入する。出力の数はnum_rowsで定義されている。
+* Hint
+* 層に対する入力はinput[]に入っている。入力の数はnum_inputs + 1個(バイアス分)
+* 重みはweights[][]に入っている。添え字はweights[出力][入力]の順である。
+* シグモイド関数はsigmoid()で定義されている。
+*/
 
 void layer::calc_outputs() {
-	for (int row= 0; row < num_rows; ++row) {
-		double sum_out=0;
-		for (int input = 0; input < num_inputs + 1; ++input) {
-			sum_out += inputs[input] * weights[row][input];
-		}
-		outputs[row] = sigmoid(sum_out);
-	}
+	
 }
 
+/**
+* 穴埋めポイント
+* calc_dL_dx_for_before()
+* この関数では前の層が使用するdL/dxをバイアスを除いた入力に対して算出する。
+* dL_dx_for_before[]に算出したdL/dxを代入する
+* Hint
+* バイアスはinputs[0]に入っている。
+* 層の出力はoutputs[]に入っている。出力の数はnum_rowsで定義されている。
+* 重みはweights[][]に入っている。添え字はweights[出力][入力]の順である。
+* 前の層によって計算されたdL/dxはdL_dx[]に入っている。dL_dxのサイズは層の出力と同じである。
+*/
 void layer::calc_dL_dx_for_before() {
-	vector<double> tmp_dL_dx(num_inputs);
-	for (int input = 0; input < num_inputs; ++input) {//バイアスを除いたインプットの分だけやる
-		double sum = 0;
-		for (int row = 0; row < num_rows; ++row) {
-			// weights[row][0]はバイアスに対する重みなのでdL_dYを計算する必要がない
-			// よってinput + 1で0の部分を省いている
-			sum += dL_dx[row] * outputs[row] * (1 - outputs[row]) * weights[row][input + 1];
-		}
-		tmp_dL_dx[input] = sum;
-	}
-	dL_dx_for_before = tmp_dL_dx;
+	
 }
 
+/**
+* 穴埋めポイント
+* update_weights()
+* この関数では層の重みの更新を行う。
+* weights[][]を更新する。
+* Hint
+* 学習率はepsilonに入っている。
+* 層に対する入力はinput[]に入っている。入力の数はnum_inputs + 1個(バイアス分)
+* 層の出力はoutputs[]に入っている。出力の数はnum_rowsで定義されている。
+* 重みはweights[][]に入っている。添え字はweights[出力][入力]の順である。
+* 前の層によって計算されたdL/dxはdL_dx[]に入っている。dL_dxのサイズは層の出力と同じである。
+*/
 void layer::update_weights() {
-	for (int row = 0; row < num_rows; ++row) {
-		for (int input = 0; input < num_inputs + 1; ++input) {
-			weights[row][input] -= epsilon * (1 - outputs[row]) * outputs[row] * inputs[input] * dL_dx[row];
-		}
-	}
+	
 }
 
+/**
+* 穴埋めポイント
+* pool_errors()
+* この関数では一括学習のための重みに対する更新量の合計を計算する。
+* 重みの更新量の合計をsum_errors_for_patch[][]に入力する。
+* Hint
+* 添え字はsum_errors_for_patch[出力][入力]の順である。
+* 学習率はepsilonに入っている。
+* 層に対する入力はinput[]に入っている。入力の数はnum_inputs + 1個(バイアス分)
+* 層の出力はoutputs[]に入っている。出力の数はnum_rowsで定義されている。
+* 前の層によって計算されたdL/dxはdL_dx[]に入っている。dL_dxのサイズは層の出力と同じである。
+*/
 void layer::pool_errors() {
-	for (int row = 0; row < num_rows; ++row) {
-		for (int input = 0; input < num_inputs + 1; ++input) {
-			sum_errors_for_patch[row][input] += epsilon * (1 - outputs[row]) * outputs[row] * inputs[input] * dL_dx[row];
-		}
-	}
+	
 }
 
+/**
+* 穴埋めポイント
+* update_weights_for_patc()
+* この関数では一括学習の時に重みの更新を行う。
+* 重みの更新量の合計であるsum_errors_for_patch[][]を用いて重みweight()の更新を行う。
+* Hint
+* 添え字はsum_errors_for_patch[出力][入力]の順である。
+* 重みはweights[][]に入っている。添え字はweights[出力][入力]の順である。
+* 
+*/
 void layer::update_weights_for_patch(int data_size) {
-	for (int row = 0; row < num_rows; ++row) {
-		for (int input = 0; input < num_inputs + 1; ++input) {
-			weights[row][input] -= sum_errors_for_patch[row][input]/data_size;
-		}
-	}
-	sum_errors_for_patch = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));// 初期化
+	
 }
 
 void layer::print_weight() {
