@@ -9,13 +9,13 @@ using namespace std;
 vector<vector<double>> get_vector_from_file(string filename);
 int main() {
 	// ユーザ入力部
-	int soshi,sou,is_chikuji;
+	int soshi,sou,is_online;
 	cout << "素子数:";
 	cin >> soshi;
 	cout << "層数:";
 	cin >> sou;
 	cout << "一括学習:0, 逐次学習:1" << endl <<":";
-	cin >> is_chikuji;
+	cin >> is_online;
 	// データ読み取り部
 	vector<vector<double>> input_data = get_vector_from_file("data.csv");
 	vector<vector<double>> output_data = get_vector_from_file("data_T.csv");
@@ -24,7 +24,7 @@ int main() {
 	// ここからNN本体
 	// ManageLayer クラスの第4引数が学習率だから変えたければいじって
 	ManageLayer ml(sou, soshi, input_data[0].size(), output_data[0].size() , 0.5);
-	if (is_chikuji == 1) {
+	if (is_online) {
 		ml.online(input_data,output_data);
 	}
 	else {
