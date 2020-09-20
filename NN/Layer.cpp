@@ -24,7 +24,7 @@ void layer::init_weight() {
 	}
 }
 
-void layer::comp_outputs() {
+void layer::calc_outputs() {
 	for (int row= 0; row < num_rows; ++row) {
 		double sum_out=0;
 		for (int input = 0; input < num_inputs + 1; ++input) {
@@ -34,18 +34,18 @@ void layer::comp_outputs() {
 	}
 }
 
-void layer::comp_dL_dY() {
-	vector<double> dL_dY(num_inputs);
+void layer::calc_dL_dx_for_before() {
+	vector<double> tmp_dL_dx(num_inputs);
 	for (int input = 0; input < num_inputs; ++input) {//バイアスを除いたインプットの分だけやる
 		double sum = 0;
 		for (int row = 0; row < num_rows; ++row) {
-			// weights[row][0]はバイアスに対する重みなのでdL_dYを計算する必要がない
+			// weights[row][0]はバイアスに対する重みなのでdL_dxを計算する必要がない
 			// よってinput + 1で0の部分を省いている
 			sum += dL_dx[row] * outputs[row] * (1 - outputs[row]) * weights[row][input + 1];
 		}
-		dL_dY[input] = sum;
+		tmp_dL_dx[input] = sum;
 	}
-	dL_dY_for_before = dL_dY;
+	dL_dx_for_before = tmp_dL_dx;
 }
 
 void layer::update_weights() {
@@ -70,7 +70,6 @@ void layer::update_weights_for_patch(int data_size) {
 			weights[row][input] -= sum_errors_for_patch[row][input]/data_size;
 		}
 	}
-	sum_errors_for_patch = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));// 初期化
 }
 
 void layer::print_weight() {
