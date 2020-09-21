@@ -13,6 +13,7 @@ ManageLayer::ManageLayer(int num_layer,int num_rows,int num_input,int num_output
 	for (int l = 0; l < num_layer + 1; ++l) {
 		// 最初の中間層の入力の数は，そのままデータの入力の数
 		// それ以降の中間層の入力の数は中間層の素子の数(layerクラスの引数の入力の数はバイアスを含まないため)
+		// 最後の層は出力層なので出力の数はラベルデータの数
 		if (l == 0) {
 			middle_layers.push_back(layer(num_rows, num_input, epsilon));
 		}
@@ -24,55 +25,49 @@ ManageLayer::ManageLayer(int num_layer,int num_rows,int num_input,int num_output
 		}
 	}
 }
+
+/**
+* 穴埋めポイント
+* 
+*/
 vector<double> ManageLayer::forword(const vector<double>& input) {
 	for (int l = 0; l < num_layer + 1; ++l) {
 		// 最初の中間層だけ入力を引数からもらう
 		// それ以降は一つ前の中間層の出力を入力としてもらっている
-		if (l == 0) {
-			middle_layers[l].set_inputs(input);
-		}
-		else {
-			middle_layers[l].set_inputs(middle_layers[l - 1].get_outputs());
-		}
-		middle_layers[l].calc_outputs();
 	}
 	// 出力層の出力を返り値で返している
-	return middle_layers[num_layer].get_outputs();
+	return;
 }
+/**
+* 穴埋めポイント
+*
+*/
 void ManageLayer::back_online(vector<double> &error) {
 	for (int l = num_layer; l >= 0; --l) {
-		if (l == num_layer) {
-			// 真値と出力層の出力の差を誤差として出力層の更新用dL_dxにセットする
-			middle_layers[l].set_dL_dx(error);
-		}
-		else {
-			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
-		}
+			// 出力層では真値と出力層の出力の差を誤差として更新用dL_dxにセットする
+			// それ以外の中間層では重みの更新用のdL_dxを後の層から調達する
 		// 更新用dL_dxを使って前の層に渡すdL_dxを算出する　重み更新の前にやること
-		middle_layers[l].calc_dL_dx_for_before();
 		// 更新用dL_dxを使って重みを更新
-		middle_layers[l].update_weights();
 	}
 }
+/**
+* 穴埋めポイント
+*
+*/
 // ほぼ上のback_onlineと同じ
 // ただしこちらは重みの更新をしないで，誤差をためる
 void ManageLayer::pool_errors_patch(const vector<double>& error) {
 	for (int l = num_layer; l >= 0; --l) {
-		if (l == num_layer) {
-			middle_layers[l].set_dL_dx(error);
-		}
-		else {
-			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
-		}
-		middle_layers[l].calc_dL_dx_for_before();
-		middle_layers[l].pool_errors();
 	}
 }
-//全ての層でためた誤差を使って重みを更新する
+/**
+* 穴埋めポイント
+*
+*/
+// 全ての層でためた誤差を使って重みを更新する
+// 次のデータのエポックのためにためた誤差をリセットすること
 void ManageLayer::back_patch(int data_size) {
 	for (int l = num_layer - 1; l >= 0; --l) {
-		middle_layers[l].update_weights_for_patch(data_size);
-		middle_layers[l].reset_weights_variation();
 	}
 }
 
@@ -123,6 +118,10 @@ void ManageLayer::online(const vector<vector<double>> &input_data, vector<vector
 			break;
 	}*/
 }
+/**
+* 穴埋めポイント
+*
+*/
 // 大体onlineと同じ
 void ManageLayer::patch(const vector<vector<double>>& input_data, vector<vector<double>>& output_data) {
 	double loss = 100;
