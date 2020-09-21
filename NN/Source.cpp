@@ -31,7 +31,11 @@ int main() {
 	else {
 		ml.patch(input_data,output_data);
 	}
-	//ml.test(test_input_data,test_output_data);
+	/**
+	* 穴埋めポイント
+	* forward()を使って出力結果を出す。
+	* 教師データと未学習データの出力結果を出力する。
+	*/
 	return 0;
 }
 vector<vector<double>> get_vector_from_file(string filename) {
