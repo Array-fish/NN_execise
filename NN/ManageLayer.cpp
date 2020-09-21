@@ -10,12 +10,14 @@ ManageLayer::ManageLayer(int num_layer,int num_rows,int num_input,int num_output
 	, num_output(num_output)
 	, epsilon(epsilon)
 {
-	output_layer = new layer(num_output, num_rows, epsilon);
-	for (int l = 0; l < num_layer; ++l) {
+	for (int l = 0; l < num_layer + 1; ++l) {
 		// 最初の中間層の入力の数は，そのままデータの入力の数
 		// それ以降の中間層の入力の数は中間層の素子の数(layerクラスの引数の入力の数はバイアスを含まないため)
 		if (l == 0) {
 			middle_layers.push_back(layer(num_rows, num_input, epsilon));
+		}
+		else if (l == num_layer) {
+			middle_layers.push_back(layer(num_output, num_rows, epsilon));
 		}
 		else {
 			middle_layers.push_back(layer(num_rows, num_rows, epsilon));
@@ -23,7 +25,7 @@ ManageLayer::ManageLayer(int num_layer,int num_rows,int num_input,int num_output
 	}
 }
 vector<double> ManageLayer::forword(const vector<double>& input) {
-	for (int l = 0; l < num_layer; ++l) {
+	for (int l = 0; l < num_layer + 1; ++l) {
 		// 最初の中間層だけ入力を引数からもらう
 		// それ以降は一つ前の中間層の出力を入力としてもらっている
 		if (l == 0) {
@@ -34,40 +36,30 @@ vector<double> ManageLayer::forword(const vector<double>& input) {
 		}
 		middle_layers[l].calc_outputs();
 	}
-	// 出力層は最後の中間層の出力を入力としてもらっている
-	output_layer->set_inputs(middle_layers[middle_layers.size() - 1].get_outputs());
-	output_layer->calc_outputs();
 	// 出力層の出力を返り値で返している
-	return output_layer->get_outputs();
+	return middle_layers[num_layer].get_outputs();
 }
 void ManageLayer::back_online(vector<double> &error) {
-	// 真値と出力層の出力の差を誤差として出力層の更新用dL_dxにセットする
-	output_layer->set_dL_dx(error);
-	// 更新用dL_dxを使って前の層に渡すdL_dxを算出する　重み更新の前にやること
-	output_layer->calc_dL_dx_for_before();
-	// 更新用dL_dxを使って重みを更新
-	output_layer->update_weights();
-	// 以下同様に すべての中間層の重みを更新
-	for (int l = num_layer - 1; l >= 0; --l) {
-		if (l == num_layer - 1) {
-			middle_layers[l].set_dL_dx(output_layer->get_dL_dx_for_before());
+	for (int l = num_layer; l >= 0; --l) {
+		if (l == num_layer) {
+			// 真値と出力層の出力の差を誤差として出力層の更新用dL_dxにセットする
+			middle_layers[l].set_dL_dx(error);
 		}
 		else {
 			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
 		}
+		// 更新用dL_dxを使って前の層に渡すdL_dxを算出する　重み更新の前にやること
 		middle_layers[l].calc_dL_dx_for_before();
+		// 更新用dL_dxを使って重みを更新
 		middle_layers[l].update_weights();
 	}
 }
 // ほぼ上のback_onlineと同じ
 // ただしこちらは重みの更新をしないで，誤差をためる
 void ManageLayer::pool_errors_patch(const vector<double>& error) {
-	output_layer->set_dL_dx(error);
-	output_layer->calc_dL_dx_for_before();
-	output_layer->pool_errors();
-	for (int l = num_layer - 1; l >= 0; --l) {
-		if (l == num_layer - 1) {
-			middle_layers[l].set_dL_dx(output_layer->get_dL_dx_for_before());
+	for (int l = num_layer; l >= 0; --l) {
+		if (l == num_layer) {
+			middle_layers[l].set_dL_dx(error);
 		}
 		else {
 			middle_layers[l].set_dL_dx(middle_layers[l + 1].get_dL_dx_for_before());
@@ -78,8 +70,6 @@ void ManageLayer::pool_errors_patch(const vector<double>& error) {
 }
 //全ての層でためた誤差を使って重みを更新する
 void ManageLayer::back_patch(int data_size) {
-	output_layer->update_weights_for_patch(data_size);
-	output_layer->reset_weights_variation();
 	for (int l = num_layer - 1; l >= 0; --l) {
 		middle_layers[l].update_weights_for_patch(data_size);
 		middle_layers[l].reset_weights_variation();
@@ -199,5 +189,4 @@ void ManageLayer::print_weight() {
 	for (int l = 0; l < middle_layers.size(); ++l) {
 		middle_layers[l].print_weight();
 	}
-	output_layer->print_weight();
 }

@@ -12,7 +12,6 @@ private:
 	const int num_input;         // 入力の数
 	const int num_output;        // 出力の数
 	const double epsilon;        // 学習率
-	layer* output_layer;         // 出力層
 	vector<layer> middle_layers; // 中間層
 	// function
 	/** back_online, back_patch
@@ -41,7 +40,7 @@ public:
 	* 入力データに対する順方向演算を行う
 	*/
 	vector<double> forword(const vector<double>& input);
-	/** test
+	/** loss
 	* 引数はテストデータの入力と出力
 	* テストデータを入力すると識別率を算出してくれる
 	*/
