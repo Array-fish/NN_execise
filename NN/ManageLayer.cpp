@@ -56,7 +56,7 @@ void ManageLayer::back_online(vector<double> &error) {
 */
 // ほぼ上のback_onlineと同じ
 // ただしこちらは重みの更新をしないで，誤差をためる
-void ManageLayer::pool_errors_patch(const vector<double>& error) {
+void ManageLayer::pool_variation_patch(const vector<double>& error) {
 	for (int l = num_layer; l >= 0; --l) {
 	}
 }
@@ -133,7 +133,7 @@ void ManageLayer::patch(const vector<vector<double>>& input_data, vector<vector<
 			for (int out = 0; out < output_data[0].size(); ++out) {
 				error[out] = result[out] - output_data[d][out];
 			}
-			pool_errors_patch(error);
+			pool_variation_patch(error);
 			double square_error = 0;
 			for (int i = 0; i < error.size(); i++) {
 				square_error += pow(error[i], 2);
@@ -182,7 +182,7 @@ void ManageLayer::loss(const vector<vector<double>>& test_input_data, vector<vec
 		}
 		loss += square_error;
 	}
-	cout << "test loss:" << loss / test_input_data.size() << endl;
+	cout << "test loss:" << loss << endl;
 }
 void ManageLayer::print_weight() {
 	for (int l = 0; l < middle_layers.size(); ++l) {

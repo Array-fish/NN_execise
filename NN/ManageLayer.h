@@ -24,7 +24,7 @@ private:
 	* “ü—Í‚Í‹³tƒf[ƒ^‚Æo—Í‚ÌŒë·B
 	* back_patch‚Å—p‚¢‚éŒë·‚ğ’~Ï‚·‚é‚â‚Â
 	*/
-	void pool_errors_patch(const vector<double> &error);// patch‚Ì‹t•ûŒü‚ÅŒë·‚ğ’~Ï‚·‚é‚â‚Â
+	void pool_variation_patch(const vector<double> &error);// patch‚Ì‹t•ûŒü‚ÅŒë·‚ğ’~Ï‚·‚é‚â‚Â
 public:
 	ManageLayer(int num_layer,int num_rows,int num_input,int num_output,double epsilon);
 	virtual ~ManageLayer() {};

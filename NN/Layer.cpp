@@ -7,10 +7,10 @@ layer::layer(int num_rows, int num_inputs, double epsilon)// ‚¢‚ë‚¢‚ë‰Šú‰»‚µ‚Ä‚
 	, epsilon(epsilon)
 {
 	weights = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));
-	sum_errors_for_patch = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));
+	sum_variation_for_patch = vector<vector<double>>(num_rows, vector<double>(num_inputs + 1, 0));
 	outputs = vector<double>(num_rows);
 	init_weight();
-	dL_dx = vector<double>(num_rows);
+	sum_dL_dx_for_this = vector<double>(num_rows);
 }
 
 void layer::init_weight() {
@@ -81,7 +81,7 @@ void layer::update_weights() {
 * ‘w‚Ìo—Í‚Íoutputs[]‚É“ü‚Á‚Ä‚¢‚éBo—Í‚Ì”‚Ínum_rows‚Å’è‹`‚³‚ê‚Ä‚¢‚éB
 * ‘O‚Ì‘w‚É‚æ‚Á‚ÄŒvZ‚³‚ê‚½dL/dx‚ÍdL_dx[]‚É“ü‚Á‚Ä‚¢‚éBdL_dx‚ÌƒTƒCƒY‚Í‘w‚Ìo—Í‚Æ“¯‚¶‚Å‚ ‚éB
 */
-void layer::pool_errors() {
+void layer::pool_variation() {
 	
 }
 
